@@ -70,6 +70,68 @@ export function registerRoutes(app: Express): Server {
   // API Endpoints
   // ==========================================
 
+  // 품목 검색 (모달용)
+  app.get("/api/items", async (req: Request, res: Response) => {
+    try {
+      const q = req.query.q as string | undefined;
+      let items;
+      if (q) {
+        items = await db.select().from(itemMst)
+          .where(sql`${itemMst.itemCd} ILIKE ${'%' + q + '%'} OR ${itemMst.itemName} ILIKE ${'%' + q + '%'}`);
+      } else {
+        items = await db.select().from(itemMst);
+      }
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      res.status(500).json({ message: "Error fetching items" });
+    }
+  });
+
+  // 품목 코드로 단건 조회 (바코드 스캔용)
+  app.get("/api/items/:code", async (req: Request, res: Response) => {
+    try {
+      const [item] = await db.select().from(itemMst)
+        .where(eq(itemMst.itemCd, req.params.code));
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching item:", error);
+      res.status(500).json({ message: "Error fetching item" });
+    }
+  });
+
+  // 사원 검색
+  app.get("/api/employees", async (req: Request, res: Response) => {
+    try {
+      const q = req.query.q as string | undefined;
+      let employees;
+      if (q) {
+        employees = await db.select().from(empMst)
+          .where(sql`${empMst.empId} ILIKE ${'%' + q + '%'} OR ${empMst.empName} ILIKE ${'%' + q + '%'}`);
+      } else {
+        employees = await db.select().from(empMst);
+      }
+      res.json(employees);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      res.status(500).json({ message: "Error fetching employees" });
+    }
+  });
+
+  // 작업실적 저장
+  app.post("/api/work-performances", async (req: Request, res: Response) => {
+    try {
+      const [performance] = await db.insert(workPerformances).values(req.body).returning();
+      res.json(performance);
+    } catch (error) {
+      console.error("Error creating work performance:", error);
+      res.status(500).json({ message: "Error creating work performance" });
+    }
+  });
+
   // 1. 실시간 검사 로그 조회
   app.get("/api/vision/logs", async (req: Request, res: Response) => {
     try {
@@ -132,6 +194,7 @@ export function registerRoutes(app: Express): Server {
         trend: recentTrend
       });
     } catch (error) {
+      console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Error fetching stats" });
     }
   });

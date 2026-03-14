@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, Camera, RefreshCw, ZoomIn, Power, Play, Square } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertTriangle, Camera, RefreshCw, ZoomIn, Power, Play, Square, X, Settings } from "lucide-react";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 
 // Types
 type VisionLog = {
@@ -28,6 +28,11 @@ export default function VisionInspectionPage() {
   // Polling for logs
   const { data: logs } = useQuery<VisionLog[]>({
     queryKey: ["/api/vision/logs"],
+    queryFn: async () => {
+      const res = await fetch("/api/vision/logs");
+      if (!res.ok) throw new Error("Failed to fetch logs");
+      return res.json();
+    },
     refetchInterval: 2000, // 2초마다 갱신
   });
 
@@ -60,7 +65,7 @@ export default function VisionInspectionPage() {
 
   // AI 분석 시뮬레이션 (랜덤 박스 그리기)
   useEffect(() => {
-    let animationFrameId: number;
+    let animationFrameId: number | undefined;
 
     const drawOverlay = () => {
       if (!isLive || !videoRef.current || !canvasRef.current) return;
@@ -95,11 +100,13 @@ export default function VisionInspectionPage() {
 
     if (isLive) {
       drawOverlay();
-    } else {
-      cancelAnimationFrame(animationFrameId);
     }
 
-    return () => cancelAnimationFrame(animationFrameId);
+    return () => {
+      if (animationFrameId !== undefined) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [isLive]);
 
   // 컴포넌트 언마운트 시 카메라 정지
@@ -288,14 +295,22 @@ export default function VisionInspectionPage() {
 
       {/* Image Preview Dialog */}
       <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
-        <DialogContent className="max-w-4xl bg-slate-900 border-slate-800 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-slate-100">검사 이미지 상세 보기</DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center border border-slate-700">
-            {selectedImage && (
-              <img src={selectedImage} alt="Detail" className="max-w-full max-h-full object-contain" />
-            )}
+        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden border-0 shadow-2xl">
+          <div className="bg-gradient-to-r from-purple-700 to-purple-600 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white">
+              <Settings className="w-4 h-4 opacity-80" />
+              <span className="font-bold text-sm">검사 이미지 상세 보기</span>
+            </div>
+            <DialogClose className="text-white/70 hover:text-white transition-colors rounded-sm hover:bg-white/10 p-1">
+              <X className="w-4 h-4" />
+            </DialogClose>
+          </div>
+          <div className="bg-slate-900 p-4">
+            <div className="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center border border-slate-700">
+              {selectedImage && (
+                <img src={selectedImage} alt="Detail" className="max-w-full max-h-full object-contain" />
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

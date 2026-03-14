@@ -31,6 +31,11 @@ export default function Dashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
     queryKey: ["/api/vision/stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/vision/stats");
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    },
     refetchInterval: 5000,
   });
 

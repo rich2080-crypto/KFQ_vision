@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { registerRoutes } from "./routes";
 import path from "path";
@@ -9,11 +10,11 @@ app.use(express.urlencoded({ extended: false }));
 (async () => {
   const server = registerRoutes(app);
 
-  // Serve static files in production
   if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../dist")));
+    const publicDir = path.join(__dirname, "public");
+    app.use(express.static(publicDir));
     app.get("*", (_req, res) => {
-      res.sendFile(path.join(__dirname, "../dist/index.html"));
+      res.sendFile(path.join(publicDir, "index.html"));
     });
   }
 

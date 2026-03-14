@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "tsx watch server/index.ts",
-    "build": "vite build",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --packages=external --alias:@shared=./shared --banner:js=\"import{fileURLToPath}from'url';import{dirname}from'path';const __filename=fileURLToPath(import.meta.url);const __dirname=dirname(__filename);\"",
     "start": "node dist/index.js",
     "db:push": "drizzle-kit push:pg"
   },
@@ -46,6 +48,7 @@
     "clsx": "^2.1.0",
     "cmdk": "^1.0.0",
     "date-fns": "^3.3.1",
+    "dotenv": "^17.3.1",
     "drizzle-orm": "^0.29.3",
     "drizzle-zod": "^0.5.1",
     "express": "^4.18.2",
@@ -57,6 +60,7 @@
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.11.3",
+    "postgres": "^3.4.3",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.0",
     "react-dom": "^18.2.0",
